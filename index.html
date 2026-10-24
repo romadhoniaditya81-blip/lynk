@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Tampilkan layar Android — LayarLink</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #727d91;
+      --line: #e8ebf2;
+      --blue: #5267ed;
+      --blue-dark: #4055d7;
+      --mint: #dff7ec;
+      --surface: #fff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 87% 8%, rgba(212, 221, 255, .64), transparent 28rem),
+        #f5f7fb;
+    }
+
+    button { font: inherit; }
+    .app { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+    header {
+      height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(224, 229, 239, .8);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 18px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(145deg, #7184ff, #4e5fe2);
+      box-shadow: 0 6px 14px #5267ed35;
+    }
+    .brand-mark svg { width: 21px; }
+    .private-label { display: flex; align-items: center; gap: 7px; color: #657186; font-size: 13px; font-weight: 600; }
+    .private-label svg { color: #37a979; }
+
+    main { padding: 56px 0 68px; }
+    .intro { text-align: center; max-width: 680px; margin: 0 auto 34px; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 99px;
+      background: #e9edff;
+      color: #4c5fda;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .45px;
+      text-transform: uppercase;
+    }
+    h1 { margin: 17px 0 12px; font-size: clamp(32px, 5vw, 48px); line-height: 1.12; letter-spacing: -2px; }
+    .intro p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.7; }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(270px, .85fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+    .card { border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 14px 45px rgba(36, 51, 90, .055); }
+    .viewer { overflow: hidden; }
+    .viewer-head { height: 59px; padding: 0 19px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #edf0f5; }
+    .viewer-title { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #aab2c1; }
+    .live-dot.active { background: #38b77c; box-shadow: 0 0 0 4px #38b77c1b; }
+    .viewer-status { color: #8a94a6; font-size: 12px; }
+    .screen {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background-color: #f9faff;
+      background-image: radial-gradient(#dce2f0 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .empty-state { max-width: 360px; text-align: center; }
+    .device-illustration {
+      width: 92px;
+      height: 138px;
+      margin: 0 auto 19px;
+      padding: 7px;
+      border: 2px solid #d8deed;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 12px 28px #34466a12;
+    }
+    .device-screen { height: 100%; display: grid; place-items: center; border-radius: 13px; background: linear-gradient(145deg, #edf0ff, #f5f6fb); color: #7a89ec; }
+    .device-screen svg { width: 35px; }
+    .empty-state h2 { margin: 0 0 8px; font-size: 17px; letter-spacing: -.3px; }
+    .empty-state p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+    video { display: none; width: 100%; max-height: 540px; background: #10131b; object-fit: contain; }
+    video.visible { display: block; }
+    .controls { padding: 17px 19px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #edf0f5; }
+    .control-hint { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--blue);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+      box-shadow: 0 5px 12px #5267ed2a;
+    }
+    .button[hidden] { display: none; }
+    .button:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .button:focus-visible, .stop-button:focus-visible { outline: 3px solid #91a0ff; outline-offset: 3px; }
+    .button svg { width: 17px; }
+    .button.stop { background: #f1f3f8; color: #455066; box-shadow: none; }
+    .button.stop:hover { background: #e7eaf1; }
+    .usb-card { padding: 23px 25px 20px; margin-bottom: 27px; border-color: #e0e5ff; background: linear-gradient(115deg, #fff 45%, #f5f6ff); }
+    .usb-copy { display: flex; align-items: flex-start; gap: 15px; }
+    .usb-icon { width: 43px; height: 43px; flex: 0 0 43px; display: grid; place-items: center; border-radius: 13px; color: #5367e8; background: #e9edff; }
+    .usb-icon svg { width: 23px; }
+    .usb-eyebrow { color: #596ce4; font-size: 11px; font-weight: 750; letter-spacing: .6px; text-transform: uppercase; }
+    .usb-copy h2 { margin: 4px 0 6px; font-size: 18px; letter-spacing: -.45px; }
+    .usb-copy p { max-width: 690px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .usb-button { margin: 18px 0 17px 58px; text-decoration: none; }
+    .usb-button svg { width: 16px; }
+    .usb-steps { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-left: 58px; padding-top: 15px; border-top: 1px solid #edf0f8; }
+    .usb-steps span { display: inline-flex; align-items: center; gap: 7px; color: #586276; font-size: 11px; }
+    .usb-steps b { width: 19px; height: 19px; display: grid; place-items: center; border-radius: 6px; background: #eef0ff; color: #586be2; font-size: 10px; }
+    .usb-safety { margin: 14px 0 0 58px; color: #758095; font-size: 11px; line-height: 1.55; }
+    .usb-safety strong { color: #566178; }
+    .section-heading { margin: 0 0 15px; }
+    .section-heading h2 { margin: 0 0 4px; font-size: 16px; letter-spacing: -.35px; }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .side-panel { padding: 22px; }
+    .side-panel h2 { margin: 1px 0 17px; font-size: 15px; letter-spacing: -.2px; }
+    .step { display: grid; grid-template-columns: 30px 1fr; gap: 11px; padding: 13px 0; border-top: 1px solid #f0f2f6; }
+    .step-number { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 9px; background: #f0f2ff; color: #5669e6; font-size: 12px; font-weight: 750; }
+    .step h3 { margin: 1px 0 4px; font-size: 13px; }
+    .step p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .privacy-note { margin-top: 15px; padding: 13px; border: 1px solid #d9f0e5; border-radius: 12px; background: #f3fbf7; }
+    .privacy-note strong { display: flex; align-items: center; gap: 7px; color: #27845c; font-size: 12px; }
+    .privacy-note p { margin: 6px 0 0; color: #62796e; font-size: 11px; line-height: 1.55; }
+    .notice { min-height: 20px; margin-top: 11px; color: #a1483c; font-size: 12px; line-height: 1.5; }
+    .compatibility { margin: 18px auto 0; max-width: 780px; text-align: center; color: #8992a2; font-size: 12px; line-height: 1.65; }
+    footer { padding: 20px 0 26px; border-top: 1px solid rgba(224, 229, 239, .8); color: #929bad; font-size: 12px; text-align: center; }
+
+    @media (max-width: 760px) {
+      .app { width: min(100% - 30px, 560px); }
+      header { height: 68px; }
+      main { padding: 38px 0 45px; }
+      .intro { margin-bottom: 24px; }
+      .intro p { font-size: 14px; }
+      .usb-card { padding: 19px; margin-bottom: 25px; }
+      .usb-copy { gap: 11px; }
+      .usb-copy h2 { font-size: 16px; }
+      .usb-copy p { font-size: 12px; }
+      .usb-button, .usb-steps, .usb-safety { margin-left: 0; }
+      .usb-button { width: 100%; }
+      .usb-steps { gap: 10px; }
+      .usb-steps span { align-items: flex-start; max-width: 100%; }
+      .section-heading { margin-bottom: 12px; }
+      .workspace { grid-template-columns: 1fr; gap: 14px; }
+      .screen { min-height: 285px; }
+      .side-panel { padding: 19px; }
+      .step { grid-template-columns: 30px 1fr; }
+      .private-label { font-size: 11px; }
+    }
+    @media (max-width: 420px) {
+      .app { width: calc(100% - 24px); }
+      .private-label { gap: 4px; }
+      .controls { align-items: flex-start; flex-direction: column; }
+      .controls .button { width: 100%; }
+      .screen { min-height: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M9 7h6M10 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </span>
+        LayarLink
+      </div>
+      <div class="private-label">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 2.9 8.1 7 10 4.1-1.9 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Berbagi dengan izin
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <span class="eyebrow"><span aria-hidden="true">✦</span> Praktis &amp; privat</span>
+        <h1>Tampilkan layar Android<br>di laptop Anda.</h1>
+        <p>Hubungkan ponsel Android dengan kabel USB, lalu setujui permintaan akses di browser dan ponsel.</p>
+      </section>
+
+      <section class="card usb-card" aria-labelledby="usbTitle">
+        <div class="usb-copy">
+          <span class="usb-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0-13-3 3m3-3 3 3M12 16l-4-4m4 4 4-4M8 12H6a2 2 0 0 0-2 2v2m12-4h2a2 2 0 0 1 2 2v2M4 18v1m16-1v1M12 16v4m-2 1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div>
+            <span class="usb-eyebrow">Untuk Android · Kabel USB</span>
+            <h2 id="usbTitle">Hubungkan ponsel ke laptop</h2>
+            <p>Mulai pencerminan layar melalui Tango Web. Alat ini berjalan di tab baru dan akan meminta izin USB serta konfirmasi USB debugging di ponsel.</p>
+          </div>
+        </div>
+        <a class="button usb-button" href="https://app.tangoapp.dev/" target="_blank" rel="noopener noreferrer">
+          Buka pencerminan USB
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9m5 1v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div class="usb-steps">
+          <span><b>1</b> Gunakan Chrome atau Edge di laptop</span>
+          <span><b>2</b> Aktifkan Opsi pengembang &amp; USB debugging di Android</span>
+          <span><b>3</b> Sambungkan kabel data, lalu setujui kedua permintaan akses</span>
+        </div>
+        <p class="usb-safety"><strong>Keamanan:</strong> USB debugging memberi akses pengembangan ke perangkat. Setujui hanya laptop yang Anda percaya dan matikan kembali setelah selesai.</p>
+      </section>
+
+      <div class="section-heading">
+        <h2>Atau bagikan layar dari browser</h2>
+        <p>Gunakan fitur ini untuk membagikan layar atau jendela yang tersedia di perangkat Anda.</p>
+      </div>
+      <section class="workspace" aria-label="Berbagi layar">
+        <div class="card viewer">
+          <div class="viewer-head">
+            <div class="viewer-title"><span class="live-dot" id="liveDot"></span><span id="viewerTitle">Pratinjau layar</span></div>
+            <span class="viewer-status" id="viewerStatus">Belum terhubung</span>
+          </div>
+          <div class="screen" id="screen">
+            <div class="empty-state" id="emptyState">
+              <div class="device-illustration" aria-hidden="true">
+                <div class="device-screen">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+              </div>
+              <h2>Layar Anda akan muncul di sini</h2>
+              <p>Tekan tombol berbagi layar, lalu pilih layar atau jendela yang ingin Anda tampilkan.</p>
+            </div>
+            <video id="preview" autoplay playsinline aria-label="Pratinjau layar yang dibagikan"></video>
+          </div>
+          <div class="controls">
+            <span class="control-hint" id="controlHint">Tidak ada layar yang dibagikan.</span>
+            <button class="button" id="shareButton" type="button">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 21h8m-4-4v4m0-14v6m0 0 3-3m-3 3-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Mulai berbagi layar
+            </button>
+            <button class="button stop" id="stopButton" type="button" hidden>Hentikan berbagi</button>
+          </div>
+        </div>
+
+        <aside class="card side-panel">
+          <h2>Cara menghubungkan</h2>
+          <div class="step">
+            <span class="step-number">1</span>
+            <div><h3>Tekan tombol berbagi</h3><p>Browser akan membuka dialog izin resmi di perangkat Anda.</p></div>
+          </div>
+          <div class="step">
+            <span class="step-number">2</span>
+            <div><h3>Pilih layar yang diizinkan</h3><p>Pilih layar atau jendela yang ingin ditampilkan, lalu konfirmasi.</p></div>
+          </div>
+          <div class="step">
+            <span class="step-number">3</span>
+            <div><h3>Hentikan kapan saja</h3><p>Gunakan tombol berhenti di sini atau kontrol berbagi dari browser.</p></div>
+          </div>
+          <div class="privacy-note">
+            <strong>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 2.9 8.1 7 10 4.1-1.9 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Privasi Anda tetap terjaga
+            </strong>
+            <p>Layar hanya dibagikan setelah Anda menyetujui dialog browser. Video diproses di halaman ini dan tidak diunggah ke server.</p>
+          </div>
+          <div class="notice" id="notice" role="status" aria-live="polite"></div>
+        </aside>
+      </section>
+      <p class="compatibility">Pencerminan Android via USB memerlukan browser Chromium desktop yang mendukung WebUSB, kabel data, USB debugging, serta persetujuan Anda di browser dan ponsel. Tombol di atas membuka alat pencerminan USB pihak ketiga di tab baru. Fitur berbagi layar browser di bawah ini adalah opsi terpisah.</p>
+    </main>
+    <footer>LayarLink · Berbagi layar, dengan kendali di tangan Anda.</footer>
+  </div>
+
+  <script>
+    const shareButton = document.getElementById("shareButton");
+    const stopButton = document.getElementById("stopButton");
+    const preview = document.getElementById("preview");
+    const emptyState = document.getElementById("emptyState");
+    const liveDot = document.getElementById("liveDot");
+    const viewerTitle = document.getElementById("viewerTitle");
+    const viewerStatus = document.getElementById("viewerStatus");
+    const controlHint = document.getElementById("controlHint");
+    const notice = document.getElementById("notice");
+    let activeStream = null;
+
+    function stopSharing() {
+      if (activeStream) {
+        activeStream.getTracks().forEach((track) => track.stop());
+        activeStream = null;
+      }
+      preview.srcObject = null;
+      preview.classList.remove("visible");
+      emptyState.hidden = false;
+      liveDot.classList.remove("active");
+      viewerTitle.textContent = "Pratinjau layar";
+      viewerStatus.textContent = "Belum terhubung";
+      controlHint.textContent = "Tidak ada layar yang dibagikan.";
+      shareButton.hidden = false;
+      stopButton.hidden = true;
+    }
+
+    shareButton.addEventListener("click", async () => {
+      notice.textContent = "";
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        notice.textContent = "Browser ini belum mendukung berbagi layar. Coba browser desktop terbaru melalui HTTPS atau localhost.";
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        activeStream = stream;
+        preview.srcObject = stream;
+        preview.classList.add("visible");
+        emptyState.hidden = true;
+        liveDot.classList.add("active");
+        viewerTitle.textContent = "Layar sedang dibagikan";
+        viewerStatus.textContent = "Terhubung";
+        controlHint.textContent = "Layar dibagikan hanya selama izin aktif.";
+        shareButton.hidden = true;
+        stopButton.hidden = false;
+        stream.getVideoTracks()[0].addEventListener("ended", stopSharing, { once: true });
+      } catch (error) {
+        if (error.name === "NotAllowedError") {
+          notice.textContent = "Izin berbagi layar tidak diberikan atau dibatalkan. Anda dapat mencoba lagi kapan saja.";
+        } else if (error.name === "NotFoundError") {
+          notice.textContent = "Tidak ada layar atau jendela yang tersedia untuk dibagikan.";
+        } else {
+          notice.textContent = "Berbagi layar gagal. Pastikan browser mendukung fitur ini dan halaman dibuka melalui HTTPS atau localhost.";
+          console.error("Gagal memulai berbagi layar:", error);
+        }
+      }
+    });
+
+    stopButton.addEventListener("click", stopSharing);
+  </script>
+</body>
+</html>
